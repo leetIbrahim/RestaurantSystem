@@ -26,7 +26,6 @@ class User:
             print("Error: Users file not found.")
         return False
 
-
     def get_role(self):
         return self.role
 
@@ -39,7 +38,7 @@ class User:
 
     def __str__(self):
         return f"Username: {self.username}, Role: {self.role}"
-
+############################ MANAGER CLASS ################################
 class Manager(User):
     def __init__(self, username, password):
         super().__init__(username, password, "manager")
@@ -151,7 +150,6 @@ class Manager(User):
         for item_name, price in self.menu.items():
             print(f"{item_name}: {price}")
 ############################################################
-
     def add_table(self, table_number, capacity):
         # Add new table or update capacity if table exists
         self.tables[table_number] = capacity
@@ -172,10 +170,10 @@ class Manager(User):
             del self.menu[item_name]
             print(f"Cancelled order for {item_name}.")
         else:
-            print(f"Food item {item_name} is not available for order.")
+            print(f"Food item {item_name} is not available for order.")            
 
-# Example usage:
 
+############################ AUTHENTICATION ################################
 username_input = input("Enter your username: ")
 password_input = input("Enter your password: ")
 if User.authenticate(username_input, password_input):
@@ -184,7 +182,7 @@ if User.authenticate(username_input, password_input):
         for user in users:
             if user["user"] == username_input:
                 role = user["role"]
-                print(f"Authentication successful. Welcome, {role.capitalize()}!")
+                print(f"You logged in successful. Welcome, {role.capitalize()}!")
                 if role == "manager":
                     manager = Manager(username_input, password_input)  # Instantiate Manager class
                     # Manager interface
@@ -227,6 +225,15 @@ if User.authenticate(username_input, password_input):
                             break
                         else:
                             print("Invalid choice. Please try again.")
+                elif role == "chef":
+                    print("This interface for chef employee!")
+
+                elif role == "cashier":
+                    print("This interface for cashier employee!")
+
+                elif role == "waitress":
+                    print("This interface for waitress employee!")
+
                 else:
                     print(f"Welcome, {role.capitalize()}")
                 break
