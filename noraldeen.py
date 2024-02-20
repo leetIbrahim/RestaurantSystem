@@ -1,3 +1,6 @@
+file_name = "items.txt"
+
+
 class User:
     def __init__(self, username, password, role):
         self.username = username
@@ -38,17 +41,24 @@ class Manager(User):
         print("All Users:")
         for username, user in self.users.items():
             print(user)
-
     def add_menu_item(self, item_name, price):
         # Add new item to the menu or update price if item exists
         self.menu[item_name] = price
         print(f"Added/Updated menu item: {item_name} - Price: {price}")
+        with open(file_name, "a") as file:
+            file.write(f"{item_name}: {price}\n")  # Format as 'Item: Price'
+            print("File saved")
 
     def view_all_menu_items(self):
-        # View all food items and their prices
-        print("All Menu Items:")
-        for item_name, price in self.menu.items():
-            print(f"{item_name}: {price}")
+        try:
+            # Attempt to open the file and read the contents
+            with open(file_name, "r") as file:
+                print("All Menu Items:")
+                for line in file:
+                    print(line.strip())  # strip() removes the newline character at the end of each line
+        except FileNotFoundError:
+            # This exception is raised if the file does not exist
+            print("No menu items have been added yet.")
 
     def add_table(self, table_number, capacity):
         # Add new table or update capacity if table exists
@@ -132,5 +142,3 @@ elif cashier.authenticate(username_input, password_input):
 else:
     print("Authentication failed. Please try again.")
 
-
-#hello
