@@ -1,5 +1,7 @@
-file_name = "items.txt"
+import json
 
+user_db = "users.json"
+menu_db = "menu.json"
 
 class User:
     def __init__(self, username, password, role):
@@ -42,23 +44,42 @@ class Manager(User):
         for username, user in self.users.items():
             print(user)
     def add_menu_item(self, item_name, price):
-        # Add new item to the menu or update price if item exists
+        # Load existing menu items
+        self.load_menu_items()
+        
+        # Add or update the menu item
         self.menu[item_name] = price
         print(f"Added/Updated menu item: {item_name} - Price: {price}")
-        with open(file_name, "a") as file:
-            file.write(f"{item_name}: {price}\n")  # Format as 'Item: Price'
-            print("File saved")
+        
+        # Save the updated menu items to the file
+        self.save_menu_items()
+
+    def save_menu_items(self):
+        # Save the menu dictionary to a JSON file
+        with open(menu_db, "w") as file:
+            json.dump(self.menu, file, indent=4)
+            print("Menu saved to file.")
+
+    def load_menu_items(self):
+        # Load the menu items from the JSON file into the menu dictionary
+        try:
+            with open(menu_db, "r") as file:
+                self.menu = json.load(file)
+        except FileNotFoundError:
+            # If the file doesn't exist, we just continue with an empty menu
+            self.menu = {}
 
     def view_all_menu_items(self):
-        try:
-            # Attempt to open the file and read the contents
-            with open(file_name, "r") as file:
-                print("All Menu Items:")
-                for line in file:
-                    print(line.strip())  # strip() removes the newline character at the end of each line
-        except FileNotFoundError:
-            # This exception is raised if the file does not exist
-            print("No menu items have been added yet.")
+        # Load existing menu items
+        self.load_menu_items()
+
+        if not self.menu:
+            print("The menu is currently empty.")
+            return
+
+        print("All Menu Items:")
+        for item_name, price in self.menu.items():
+            print(f"{item_name}: {price}")
 
     def add_table(self, table_number, capacity):
         # Add new table or update capacity if table exists
@@ -85,7 +106,7 @@ class Manager(User):
 # Example usage:
 
 # Create users
-manager = Manager("manager1", "password123")
+manager = Manager("root", "root")
 cashier = User("cashier1", "password456", "cashier")
 
 # Authentication example:
