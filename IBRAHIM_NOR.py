@@ -14,8 +14,18 @@ class User:
         self.password = password
         self.role = role
 
-    def authenticate(self, username, password):
-        return self.username == username and self.password == password
+    @staticmethod
+    def authenticate(username, password):
+        try:
+            with open("users.json", "r") as file:
+                users = json.load(file)
+                for user in users:
+                    if user["user"] == username and user["password"] == password:
+                        return True
+        except FileNotFoundError:
+            print("Error: Users file not found.")
+        return False
+
 
     def get_role(self):
         return self.role
@@ -166,61 +176,59 @@ class Manager(User):
 
 # Example usage:
 
-# Create users
-manager = Manager("root", "root")
-cashier = User("cashier1", "password456", "cashier")
-
-# Authentication example:
 username_input = input("Enter your username: ")
 password_input = input("Enter your password: ")
+if User.authenticate(username_input, password_input):
+    with open("users.json", "r") as file:
+        users = json.load(file)
+        for user in users:
+            if user["user"] == username_input:
+                role = user["role"]
+                print(f"Authentication successful. Welcome, {role.capitalize()}!")
+                if role == "manager":
+                    manager = Manager(username_input, password_input)  # Instantiate Manager class
+                    # Manager interface
+                    while True:
+                        print("\nManager Interface:")
+                        print("1. Add new user")
+                        print("2. View all users")
+                        print("3. Add/Update menu item")
+                        print("4. View all menu items")
+                        print("5. Add/Update table")
+                        print("6. Show available tables")
+                        print("7. Cancel order for specific food item")
+                        print("8. Exit")
+                        choice = input("Enter your choice: ")
 
-if manager.authenticate(username_input, password_input):
-    print("Authentication successful. Welcome, Manager!")
-    print(manager)
-
-    # Manager interface
-    while True:
-        print("\nManager Interface:")
-        print("1. Add new user")
-        print("2. View all users")
-        print("3. Add/Update menu item")
-        print("4. View all menu items")
-        print("5. Add/Update table")
-        print("6. Show available tables")
-        print("7. Cancel order for specific food item")
-        print("8. Exit")
-        choice = input("Enter your choice: ")
-
-        if choice == "1":
-            new_username = input("Enter new username: ")
-            new_password = input("Enter new password: ")
-            new_role = input("Enter new role: ")
-            manager.add_user(new_username, new_password, new_role)
-        elif choice == "2":
-            manager.view_all_users()
-        elif choice == "3":
-            item_name = input("Enter item name: ")
-            price = float(input("Enter item price: "))
-            manager.add_menu_item(item_name, price)
-        elif choice == "4":
-            manager.view_all_menu_items()
-        elif choice == "5":
-            table_number = input("Enter table number: ")
-            capacity = int(input("Enter table capacity: "))
-            manager.add_table(table_number, capacity)
-        elif choice == "6":
-            manager.show_available_tables()
-        elif choice == "7":
-            item_name = input("Enter item name to cancel order: ")
-            manager.cancel_order(item_name)
-        elif choice == "8":
-            print("Exiting Manager Interface.")
-            break
-        else:
-            print("Invalid choice. Please try again.")
-elif cashier.authenticate(username_input, password_input):
-    print("Authentication successful. Welcome, Cashier!")
-    print(cashier)
+                        if choice == "1":
+                            new_username = input("Enter new username: ")
+                            new_password = input("Enter new password: ")
+                            new_role = input("Enter new role: ")
+                            manager.add_user(new_username, new_password, new_role)
+                        elif choice == "2":
+                            manager.view_all_users()
+                        elif choice == "3":
+                            item_name = input("Enter item name: ")
+                            price = float(input("Enter item price: "))
+                            manager.add_menu_item(item_name, price)
+                        elif choice == "4":
+                            manager.view_all_menu_items()
+                        elif choice == "5":
+                            table_number = input("Enter table number: ")
+                            capacity = int(input("Enter table capacity: "))
+                            manager.add_table(table_number, capacity)
+                        elif choice == "6":
+                            manager.show_available_tables()
+                        elif choice == "7":
+                            item_name = input("Enter item name to cancel order: ")
+                            manager.cancel_order(item_name)
+                        elif choice == "8":
+                            print("Exiting Manager Interface.")
+                            break
+                        else:
+                            print("Invalid choice. Please try again.")
+                else:
+                    print(f"Welcome, {role.capitalize()}")
+                break
 else:
     print("Authentication failed. Please try again.")
-

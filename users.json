@@ -1,7 +1,12 @@
 [
     {
+        "user": "admin",
+        "password": "admin",
+        "role": "manager"
+    },
+    {
         "user": "test",
         "password": "test",
-        "role": "1"
+        "role": "Chef"
     }
 ]
