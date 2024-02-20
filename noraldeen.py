@@ -1,10 +1,12 @@
 import json
 
-user_db = "users.json"
-
 class Menu:
     def __init__(self):
         self.menu = {}
+
+class Roles:
+    def __init__(self):
+        self.users_role = {}
 
 class User:
     def __init__(self, username, password, role):
@@ -32,22 +34,65 @@ class Manager(User):
     def __init__(self, username, password):
         super().__init__(username, password, "manager")
         self.menu = {}
+        self.users_role = {}
         self.tables = {}  # Table number: Number of pax
         self.users = {}   # Username: User object
         self.menu_db = "menu.json"  # JSON file for storing menu items
-    
+        self.role_db = "users.json"  # JSON file for storing user roles
+############################################################
     def add_user(self, new_username, new_password, new_role):
+        self.load_users()
         # Add new user to the system
         new_user = User(new_username, new_password, new_role)
         self.users[new_username] = new_user
+        # Add user details to users_role dictionary
+        self.users_role[new_username] = {"password": new_password, "role": new_role}
         print(f"Added new user: {new_user}")
+        self.save_users_role()
+
 
     def view_all_users(self):
+        # Load existing user roles
+        self.load_users()
+
+        if not self.users_role:
+            print("No users found.")
+            return
+
         # View all users and their details
         print("All Users:")
-        for username, user in self.users.items():
-            print(user)
-        
+        for username, user_info in self.users_role.items():
+            print(f"Username: {username}, Password: {user_info['password']}, Role: {user_info['role']}")
+
+    def load_users(self):
+        # Load the users from the JSON file into the user dictionary
+        try:
+            with open(self.role_db, "r") as file:
+                data = file.read()
+                if data.strip():  # Check if the file is not empty
+                    user_list = json.loads(data)
+                    # Convert the list of dictionaries back to a dictionary
+                    self.users_role = {user['user']: {"password": user['password'], "role": user['role']} for user in user_list}
+                else:
+                    self.users_role = {}  # Initialize to empty dictionary if file is empty
+        except FileNotFoundError:
+            # If the file doesn't exist, we just continue with an empty user dictionary
+            self.users_role = {}
+        except json.JSONDecodeError:
+            # If there is an issue with decoding JSON data, handle the error
+            print("Error: Invalid JSON data in the file.")
+            self.users_role = {}  # Initialize to empty dictionary
+
+
+    def save_users_role(self):
+        # Transform the users_role dictionary into a list of dictionaries
+        user_list = [{"user": username, **user_info} for username, user_info in self.users_role.items()]
+
+        # Save the transformed user list to a JSON file
+        with open(self.role_db, "w") as file:
+            json.dump(user_list, file, indent=4)
+            print("User roles saved to JSON file.")
+############################################################
     def add_menu_item(self, item_name, price):
         # Load existing menu items
         self.load_menu_items()
@@ -69,10 +114,20 @@ class Manager(User):
         # Load the menu items from the JSON file into the menu dictionary
         try:
             with open(self.menu_db, "r") as file:
-                self.menu = json.load(file)
+                data = file.read()
+                if data.strip():  # Check if the file is not empty
+                    self.menu = json.loads(data)
+                else:
+                    self.menu = {}  # Initialize to empty dictionary if file is empty
         except FileNotFoundError:
-            # If the file doesn't exist, we just continue with an empty menu
-            self.menu = {}
+            # If the file doesn't exist, create an empty JSON file
+            with open(self.menu_db, "w") as file:
+                file.write("{}")
+            self.menu = {}  # Initialize to empty dictionary
+        except json.JSONDecodeError:
+            # If there is an issue with decoding JSON data, handle the error
+            print("Error: Invalid JSON data in the file.")
+            self.menu = {}  # Initialize to empty dictionary
 
     def view_all_menu_items(self):
         # Load existing menu items
@@ -85,6 +140,7 @@ class Manager(User):
         print("All Menu Items:")
         for item_name, price in self.menu.items():
             print(f"{item_name}: {price}")
+############################################################
 
     def add_table(self, table_number, capacity):
         # Add new table or update capacity if table exists
