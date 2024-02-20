@@ -1,7 +1,10 @@
 import json
 
 user_db = "users.json"
-menu_db = "menu.json"
+
+class Menu:
+    def __init__(self):
+        self.menu = {}
 
 class User:
     def __init__(self, username, password, role):
@@ -31,7 +34,8 @@ class Manager(User):
         self.menu = {}
         self.tables = {}  # Table number: Number of pax
         self.users = {}   # Username: User object
-
+        self.menu_db = "menu.json"  # JSON file for storing menu items
+    
     def add_user(self, new_username, new_password, new_role):
         # Add new user to the system
         new_user = User(new_username, new_password, new_role)
@@ -43,6 +47,7 @@ class Manager(User):
         print("All Users:")
         for username, user in self.users.items():
             print(user)
+        
     def add_menu_item(self, item_name, price):
         # Load existing menu items
         self.load_menu_items()
@@ -56,14 +61,14 @@ class Manager(User):
 
     def save_menu_items(self):
         # Save the menu dictionary to a JSON file
-        with open(menu_db, "w") as file:
+        with open(self.menu_db, "w") as file:
             json.dump(self.menu, file, indent=4)
-            print("Menu saved to file.")
+            print("Menu saved to JSON file.")
 
     def load_menu_items(self):
         # Load the menu items from the JSON file into the menu dictionary
         try:
-            with open(menu_db, "r") as file:
+            with open(self.menu_db, "r") as file:
                 self.menu = json.load(file)
         except FileNotFoundError:
             # If the file doesn't exist, we just continue with an empty menu
