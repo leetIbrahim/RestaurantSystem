@@ -131,3 +131,6 @@ elif cashier.authenticate(username_input, password_input):
     print(cashier)
 else:
     print("Authentication failed. Please try again.")
+
+
+#test
