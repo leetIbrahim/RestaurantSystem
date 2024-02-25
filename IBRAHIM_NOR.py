@@ -1,241 +1,318 @@
-import json
 
-class Menu:
-    def __init__(self):
-        self.menu = {}
+# Functions for User Management
 
-class Roles:
-    def __init__(self):
-        self.users_role = {}
+def authenticate(username, password):
+    try:
+        with open("users.txt", "r") as file: # Opens the users.txt file
+            for user in file: # Loop going to all users to find the speific user we are trying to login
+                user_data = user.strip().split(',') # Splitting the "," from the data
+                if user_data[0] == username and user_data[1] == password: # If the username and password are same in users.txt it will return true
+                    return True
+    except FileNotFoundError:
+        print("Error: Users file not found.")
+    return False
 
-class User:
-    def __init__(self, username, password, role):
-        self.username = username
-        self.password = password
-        self.role = role
-
-    @staticmethod
-    def authenticate(username, password):
-        try:
-            with open("users.json", "r") as file:
-                users = json.load(file)
-                for user in users:
-                    if user["user"] == username and user["password"] == password:
-                        return True
-        except FileNotFoundError:
-            print("Error: Users file not found.")
-        return False
-
-    def get_role(self):
-        return self.role
-
-    def update_details(self, new_username, new_role):
-        self.username = new_username
-        self.role = new_role
-
-    def change_password(self, new_password):
-        self.password = new_password
-
-    def __str__(self):
-        return f"Username: {self.username}, Role: {self.role}"
-############################ MANAGER CLASS ################################
-class Manager(User):
-    def __init__(self, username, password):
-        super().__init__(username, password, "manager")
-        self.menu = {}
-        self.users_role = {}
-        self.tables = {}  # Table number: Number of pax
-        self.users = {}   # Username: User object
-        self.menu_db = "menu.json"  # JSON file for storing menu items
-        self.role_db = "users.json"  # JSON file for storing user roles
-############################################################
-    def add_user(self, new_username, new_password, new_role):
-        self.load_users()
-        # Add new user to the system
-        new_user = User(new_username, new_password, new_role)
-        self.users[new_username] = new_user
-        # Add user details to users_role dictionary
-        self.users_role[new_username] = {"password": new_password, "role": new_role}
-        print(f"Added new user: {new_user}")
-        self.save_users_role()
+def add_user(new_username, new_password, new_role):
+    with open("users.txt", "a") as file:
+        file.write(f"{new_username},{new_password},{new_role}\n")
+    print(f"Added new user: {new_username}, Role: {new_role}")
 
 
-    def view_all_users(self):
-        # Load existing user roles
-        self.load_users()
-
-        if not self.users_role:
-            print("No users found.")
-            return
-
-        # View all users and their details
-        print("All Users:")
-        for username, user_info in self.users_role.items():
-            print(f"Username: {username}, Password: {user_info['password']}, Role: {user_info['role']}")
-
-    def load_users(self):
-        # Load the users from the JSON file into the user dictionary
-        try:
-            with open(self.role_db, "r") as file:
-                data = file.read()
-                if data.strip():  # Check if the file is not empty
-                    user_list = json.loads(data)
-                    # Convert the list of dictionaries back to a dictionary
-                    self.users_role = {user['user']: {"password": user['password'], "role": user['role']} for user in user_list}
-                else:
-                    self.users_role = {}  # Initialize to empty dictionary if file is empty
-        except FileNotFoundError:
-            # If the file doesn't exist, we just continue with an empty user dictionary
-            self.users_role = {}
-        except json.JSONDecodeError:
-            # If there is an issue with decoding JSON data, handle the error
-            print("Error: Invalid JSON data in the file.")
-            self.users_role = {}  # Initialize to empty dictionary
+def change_user_details():
+    username = input("Enter the username of the user whose details you want to change: ")
+    with open("users.txt", "r") as file:
+        users = file.readlines()
+    found = False
+    updated_users = []
+    for user in users:
+        user_data = user.strip().split(',')
+        if user_data[0] == username:
+            found = True
+            new_username = input("Enter new username (leave empty to keep current): ")
+            new_password = input("Enter new password (leave empty to keep current): ")
+            new_role = input("Enter new role (leave empty to keep current): ")
+            if not new_username:
+                new_username = user_data[0]
+            if not new_password:
+                new_password = user_data[1]
+            if not new_role:
+                new_role = user_data[2]
+            updated_users.append(f"{new_username},{new_password},{new_role}\n")
+            print("User details updated.")
+        else:
+            updated_users.append(user)
+    if not found:
+        print("User not found.")
+    else:
+        with open("users.txt", "w") as file:
+            file.writelines(updated_users)
 
 
-    def save_users_role(self):
-        # Transform the users_role dictionary into a list of dictionaries
-        user_list = [{"user": username, **user_info} for username, user_info in self.users_role.items()]
+# Functions for Menu Management
 
-        # Save the transformed user list to a JSON file
-        with open(self.role_db, "w") as file:
-            json.dump(user_list, file, indent=4)
-            print("User roles saved to JSON file.")
-############################################################
-    def add_menu_item(self, item_name, price):
-        # Load existing menu items
-        self.load_menu_items()
+def update_menu():
+    print("1. Update existing menu item")
+    print("2. Add a new menu item")
+    print("3. View menu items")
+    print("4. Exit")
+    choice = input("Enter your choice: ")
+
+    if choice == "1":
+        update_existing_menu_item()
+    elif choice == "2":
+        add_new_menu_item()
+    elif choice == "3":
+        view_all_menu_items()
+    elif choice == "4":
+        manager_interface()
+    else:
+        print("Invalid choice. Please try again.")
+
+def update_existing_menu_item():
+    item_name = input("Enter the name of the menu item to update: ")
+    new_price = input("Enter the new price for the menu item: ")
+    
+    menu_items = read_menu_items()
+    if item_name in menu_items:
+        menu_items[item_name] = new_price
+        write_menu_items(menu_items)
+        print(f"Updated menu item: {item_name} - New Price: {new_price}")
+    else:
+        print("Menu item not found.")
+
+def add_new_menu_item():
+    item_name = input("Enter the name of the new menu item: ")
+    price = input("Enter the price for the new menu item: ")
+    
+    menu_items = read_menu_items()
+    if item_name not in menu_items:
+        menu_items[item_name] = price
+        write_menu_items(menu_items)
+        print(f"Added new menu item: {item_name} - Price: {price}")
+    else:
+        print("Menu item already exists.")
         
-        # Add or update the menu item
-        self.menu[item_name] = price
-        print(f"Added/Updated menu item: {item_name} - Price: {price}")
+    manager_interface()
+
+def block_cancel_food_item():
+    item_name = input("Enter the name of the food item to manage: ")
+    menu_items = read_menu_items()
+    
+    if item_name in menu_items:
+        print("Select action:")
+        print("1. Block")
+        print("2. Cancel")
+        print("3. Reactivate (Make active)")
+        action_option = input("Enter your choice (1, 2, or 3): ")
+
+        if action_option == "1":
+            menu_items[item_name]["status"] = "blocked"
+            print(f"Food item {item_name} blocked.")
+        elif action_option == "2":
+            menu_items[item_name]["status"] = "cancelled"
+            print(f"Food item {item_name} cancelled.")
+        elif action_option == "3":
+            menu_items[item_name]["status"] = "active"
+            print(f"Food item {item_name} reactivated.")
+        else:
+            print("Invalid choice.")
         
-        # Save the updated menu items to the file
-        self.save_menu_items()
+        write_menu_items(menu_items)
+    else:
+        print(f"Food item {item_name} not found in the menu.")
 
-    def save_menu_items(self):
-        # Save the menu dictionary to a JSON file
-        with open(self.menu_db, "w") as file:
-            json.dump(self.menu, file, indent=4)
-            print("Menu saved to JSON file.")
+    # Return to the manager interface
+    manager_interface()
 
-    def load_menu_items(self):
-        # Load the menu items from the JSON file into the menu dictionary
-        try:
-            with open(self.menu_db, "r") as file:
-                data = file.read()
-                if data.strip():  # Check if the file is not empty
-                    self.menu = json.loads(data)
-                else:
-                    self.menu = {}  # Initialize to empty dictionary if file is empty
-        except FileNotFoundError:
-            # If the file doesn't exist, create an empty JSON file
-            with open(self.menu_db, "w") as file:
-                file.write("{}")
-            self.menu = {}  # Initialize to empty dictionary
-        except json.JSONDecodeError:
-            # If there is an issue with decoding JSON data, handle the error
-            print("Error: Invalid JSON data in the file.")
-            self.menu = {}  # Initialize to empty dictionary
 
-    def view_all_menu_items(self):
-        # Load existing menu items
-        self.load_menu_items()
+def read_menu_items():
+    try:
+        with open("menu.txt", "r") as file:
+            menu_items = {}
+            for line in file:
+                item_data = line.strip().split(',')
+                item_name = item_data[0]
+                price = float(item_data[1])
+                status = item_data[2] if len(item_data) == 3 else "active"
+                menu_items[item_name] = {"price": price, "status": status}
+        return menu_items
+    except FileNotFoundError:
+        return {}
 
-        if not self.menu:
-            print("The menu is currently empty.")
-            return
 
+def write_menu_items(menu_items):
+    with open("menu.txt", "w") as file:
+        for item_name, data in menu_items.items():
+            status = data.get("status", "active")
+            file.write(f"{item_name},{data['price']},{status}\n")
+    print("Menu items updated successfully.")
+
+
+def view_all_menu_items():
+    menu_items = read_menu_items()
+    if menu_items:
         print("All Menu Items:")
-        for item_name, price in self.menu.items():
+        for item_name, price in menu_items.items():
             print(f"{item_name}: {price}")
-############################################################
-    def add_table(self, table_number, capacity):
-        # Add new table or update capacity if table exists
-        self.tables[table_number] = capacity
-        print(f"Added/Updated table: Table {table_number} - Capacity: {capacity}")
+    else:
+        print("The menu is currently empty.")
 
-    def show_available_tables(self):
-        # Show available tables
-        if not self.tables:
-            print("No tables are available at the moment.")
+
+
+# Function for the table managemnt
+        
+def update_tables():
+    print("1. Add/Update table")
+    print("2. Show available tables")
+    print("3. Change status of a table")
+    print("4. Exit")
+    choice = input("Enter your choice: ")
+
+
+    if choice == "1":
+        add_update_table()
+    elif choice == "2":
+        show_available_tables()
+    elif choice == "3":
+        change_table_status()
+    elif choice == "4":
+        manager_interface()
+    else:
+        print("Invalid choice. Please try again.")
+
+def add_update_table():
+    table_number = input("Enter table number: ")
+    capacity = input("Enter capacity for the table: ")
+    
+    tables = read_tables()
+    tables[table_number] = capacity
+    write_tables(tables)
+    print(f"Added/Updated table: Table {table_number} - Capacity: {capacity}")
+
+    # Return to the manager interface
+    manager_interface()
+
+def change_table_status():
+    table_number = input("Enter the table number to change status: ")
+    new_status = input("Enter new status (available/not available): ")
+
+    tables = read_tables()
+    if table_number in tables:
+        tables[table_number] = new_status
+        write_tables(tables)
+        print(f"Status of table {table_number} changed to: {new_status}")
+    else:
+        print("Table not found.")
+
+    # Return to the manager interface
+    manager_interface()
+
+def change_table_status():
+    table_number = input("Enter the table number to change status: ")
+    print("Select status:")
+    print("1. Available")
+    print("2. Not Available")
+    new_status_option = input("Enter your choice (1 or 2): ")
+
+    new_status = "available" if new_status_option == "1" else "not available"
+
+    tables = read_tables()
+    if table_number in tables:
+        tables[table_number] = new_status
+        write_tables(tables)
+        print(f"Status of table {table_number} changed to: {new_status}")
+    else:
+        print("Table not found.")
+
+    # Return to the manager interface
+    manager_interface()
+
+def show_available_tables():
+    tables = read_tables()
+    if tables:
+        print("Available Tables:")
+        for table, status in tables.items():
+            if status == "available":
+                print(f"Table {table}: Status - {status}")
+    else:
+        print("No tables are available at the moment.")
+def read_tables():
+    try:
+        with open("tables.txt", "r") as file:
+            tables = {}
+            for line in file:
+                table_number, status = line.strip().split(',')
+                tables[table_number] = status
+        return tables
+    except FileNotFoundError:
+        return {}
+
+def write_tables(tables):
+    with open("tables.txt", "w") as file:
+        for table_number, status in tables.items():
+            file.write(f"{table_number},{status}\n")
+    print("Tables updated successfully.")
+
+# Functions for Manager Operations
+
+def manager_interface():
+    while True:
+        print("\nManager Interface:")
+        print("1. Add new user")
+        print("2. Update user details")
+        print("3. Add/View/Update menu item")
+        print("4. Add/View/Update table")
+        print("5. Cancel order for specific food item")
+        print("6. Exit")
+        choice = input("Enter your choice: ")
+
+        if choice == "1":
+            new_username = input("Enter new username: ")
+            new_password = input("Enter new password: ")
+            new_role = input("Enter new role: ")
+            add_user(new_username, new_password, new_role)
+        elif choice == "2":
+            change_user_details()
+        elif choice == "3":
+            update_menu()
+        elif choice == "4":
+            update_tables()
+        elif choice == "5":
+            block_cancel_food_item()
+        elif choice == "6":
+            print("Exiting Manager Interface.")
+            break
         else:
-            print("Available Tables:")
-            for table, capacity in self.tables.items():
-                print(f"Table {table}: Capacity - {capacity}")
+            print("Invalid choice. Please try again.")
 
-    def cancel_order(self, item_name):
-        # Cancel order for specific food item
-        if item_name in self.menu:
-            del self.menu[item_name]
-            print(f"Cancelled order for {item_name}.")
-        else:
-            print(f"Food item {item_name} is not available for order.")            
+# Main Program
 
+def main():
+    username_input = input("Enter your username: ")
+    password_input = input("Enter your password: ")
 
-############################ AUTHENTICATION ################################
-username_input = input("Enter your username: ")
-password_input = input("Enter your password: ")
-if User.authenticate(username_input, password_input):
-    with open("users.json", "r") as file:
-        users = json.load(file)
-        for user in users:
-            if user["user"] == username_input:
-                role = user["role"]
-                print(f"You logged in successful. Welcome, {role.capitalize()}!")
-                if role == "manager":
-                    manager = Manager(username_input, password_input)  # Instantiate Manager class
-                    # Manager interface
-                    while True:
-                        print("\nManager Interface:")
-                        print("1. Add new user")
-                        print("2. View all users")
-                        print("3. Add/Update menu item")
-                        print("4. View all menu items")
-                        print("5. Add/Update table")
-                        print("6. Show available tables")
-                        print("7. Cancel order for specific food item")
-                        print("8. Exit")
-                        choice = input("Enter your choice: ")
+    if authenticate(username_input, password_input):
+        print("Authentication successful.")
 
-                        if choice == "1":
-                            new_username = input("Enter new username: ")
-                            new_password = input("Enter new password: ")
-                            new_role = input("Enter new role: ")
-                            manager.add_user(new_username, new_password, new_role)
-                        elif choice == "2":
-                            manager.view_all_users()
-                        elif choice == "3":
-                            item_name = input("Enter item name: ")
-                            price = float(input("Enter item price: "))
-                            manager.add_menu_item(item_name, price)
-                        elif choice == "4":
-                            manager.view_all_menu_items()
-                        elif choice == "5":
-                            table_number = input("Enter table number: ")
-                            capacity = int(input("Enter table capacity: "))
-                            manager.add_table(table_number, capacity)
-                        elif choice == "6":
-                            manager.show_available_tables()
-                        elif choice == "7":
-                            item_name = input("Enter item name to cancel order: ")
-                            manager.cancel_order(item_name)
-                        elif choice == "8":
-                            print("Exiting Manager Interface.")
-                            break
-                        else:
-                            print("Invalid choice. Please try again.")
-                elif role == "chef":
-                    print("This interface for chef employee!")
+        with open("users.txt", "r") as file:
+            for user in file: # get the users from users.txt
+                user_data = user.strip().split(',') # remvoe "," from users.txt
+                if user_data[0] == username_input: # Get the username from users.txt
+                    role = user_data[2] # Get the role from users.txt file
+                    print(f"Welcome, {role.capitalize()}!")
+                    if role == "manager":
+                        manager_interface()
+                    elif role == "chef":
+                        print("This interface is for chef employees.")
+                    elif role == "cashier":
+                        print("This interface is for cashier employees.")
+                    elif role == "waitress":
+                        print("This interface is for waitress employees.")
+                    else:
+                        print(f"Welcome, {role.capitalize()}!")
+                    break
+    else:
+        print("Authentication failed. Please try again.")
 
-                elif role == "cashier":
-                    print("This interface for cashier employee!")
-
-                elif role == "waitress":
-                    print("This interface for waitress employee!")
-
-                else:
-                    print(f"Welcome, {role.capitalize()}")
-                break
-else:
-    print("Authentication failed. Please try again.")
+if __name__ == "__main__":
+    main()
