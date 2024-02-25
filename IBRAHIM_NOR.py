@@ -152,10 +152,13 @@ def view_all_menu_items():
     menu_items = read_menu_items()
     if menu_items:
         print("All Menu Items:")
-        for item_name, price in menu_items.items():
-            print(f"{item_name}: {price}")
+        for item_name, data in menu_items.items():
+            price = data["price"]
+            status = data["status"]
+            print(f"{item_name}: Price: {price}, Status: {status}")
     else:
         print("The menu is currently empty.")
+
 
 
 
