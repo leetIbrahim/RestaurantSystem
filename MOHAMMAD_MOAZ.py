@@ -1,9 +1,9 @@
 import time
-
+from IBRAHIM_NOR import view_all_menu_items
 #Display the order received and refresh the list. 
 
 def display_orders():
-    orders = []  #list to store orders
+    orders = []  #The Chef InterFace
     print("Welcome to the Restaurant Order System!")
     print("Press 0 to quit.")
     print("Press 1 to refresh the order list.")
