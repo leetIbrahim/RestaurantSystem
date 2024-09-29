@@ -1,0 +1,6 @@
+1,1,manager,1
+2,2,manager,2
+3,3,waiter,3
+4,4,chef,4
+5,5,cashier,55
+6,ibrahim,chef,ibarhim

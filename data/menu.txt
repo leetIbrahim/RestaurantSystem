@@ -1,0 +1,6 @@
+1,burger,4,blocked
+2,pizza 2,24
+3,orange,5
+4,apple juice,3
+5,Greek Salad,234,eggs,24
+6,Juice 12,23
