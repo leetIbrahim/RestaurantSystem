@@ -1,3 +1,0 @@
-coca-cola,4.0,active
-cheese,4.0,active
-cheese burger,23.0,active
